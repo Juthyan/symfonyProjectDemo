@@ -17,14 +17,30 @@ permissions:
 jobs:
   symfony-tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: collaborative_workflow
+          POSTGRES_USER: yjudith
+          POSTGRES_PASSWORD: password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
+    - uses: actions/checkout@v4
     #  To automatically get bug fixes and new Php versions for shivammathur/setup-php,
     # change this to (see https://github.com/shivammathur/setup-php#bookmark-versioning):
     # uses: shivammathur/setup-php@v2
     - uses: shivammathur/setup-php@2cb9b829437ee246e9b3cac53555a39208ca6d28
       with:
-        php-version: '8.0'
-    - uses: actions/checkout@v4
+        php-version: '8.3'
+        extension: pdo_pgsql, intl, mbstring
+        coverage: none
     - name: Copy .env.test.local
       run: php -r "file_exists('.env.test.local') || copy('.env.test', '.env.test.local');"
     - name: Cache Composer packages
@@ -37,11 +53,13 @@ jobs:
           ${{ runner.os }}-php-
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-    - name: Create Database
-      run: |
-        mkdir -p data
-        touch data/database.sqlite
+
+    - name: Run Doctrine Migrations
+      env:
+        DATABASE_URL: pgsql://yjudith:password@127.0.0.1:5432/collaborative_workflow
+      run: php bin/console doctrine:migrations:migrate --no-interaction
+
     - name: Execute tests (Unit and Feature tests) via PHPUnit
       env:
-        DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
+        DATABASE_URL: pgsql://yjudith:password@127.0.0.1:5432/collaborative_workflow
       run: vendor/bin/phpunit
