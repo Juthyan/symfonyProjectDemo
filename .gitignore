@@ -1,0 +1,31 @@
+
+###> symfony/framework-bundle ###
+collaborativeWorkflow/.env.local
+collaborativeWorkflow/.env.local.php
+collaborativeWorkflow/.env.*.local
+collaborativeWorkflow/config/secrets/prod/prod.decrypt.private.php
+collaborativeWorkflow/public/bundles/
+collaborativeWorkflow/var/
+collaborativeWorkflow/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+collaborativeWorkflow/phpunit.xml
+collaborativeWorkflow/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> symfony/asset-mapper ###
+collaborativeWorkflow/public/assets/
+collaborativeWorkflow/assets/vendor/
+###< symfony/asset-mapper ###
+
+###> friendsofphp/php-cs-fixer ###
+collaborativeWorkflow/.php-cs-fixer.php
+collaborativeWorkflow/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+# macOS system files
+.DS_Store
+
+# VSCode settings folder
+.vscode/
