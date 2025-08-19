@@ -53,7 +53,7 @@ jobs:
           ${{ runner.os }}-php-
     - name: Install Dependencies
       working-directory: collaborativeWorkflow
-      run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --verboseù
+      run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --verbose
 
     - name: Run Doctrine Migrations
       env:
