@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Formatter;
 
-use App\Formatter\UserFormatter;
 use App\Entity\User;
+use App\Formatter\UserFormatter;
 use Doctrine\Common\Collections\Collection;
-use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 
 class UserFormatterTest extends MockeryTestCase
@@ -15,7 +14,7 @@ class UserFormatterTest extends MockeryTestCase
     public function testFormatUser(): void
     {
         // Mock UserRoles collection
-        $userRolesMock = Mockery::mock(Collection::class);
+        $userRolesMock = \Mockery::mock(Collection::class);
         $userRolesMock->shouldReceive('toArray')
             ->once()
             ->andReturn([
@@ -24,7 +23,7 @@ class UserFormatterTest extends MockeryTestCase
             ]);
 
         // Mock User entity
-        $userMock = Mockery::mock(User::class);
+        $userMock = \Mockery::mock(User::class);
         $userMock->expects('getId')->once()->andReturn(123);
         $userMock->expects('getUserName')->once()->andReturn('johndoe');
         $userMock->expects('getUserRoles')->once()->andReturn($userRolesMock);

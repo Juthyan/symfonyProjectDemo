@@ -7,7 +7,6 @@ namespace App\Tests\Services;
 use App\Entity\Board;
 use App\Repository\BoardRepository;
 use App\Services\BoardService;
-use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 
 class BoardServiceTest extends MockeryTestCase
@@ -17,15 +16,15 @@ class BoardServiceTest extends MockeryTestCase
 
     protected function setUp(): void
     {
-        $this->boardRepositoryMock = Mockery::mock(BoardRepository::class);
+        $this->boardRepositoryMock = \Mockery::mock(BoardRepository::class);
         $this->boardService = new BoardService($this->boardRepositoryMock);
     }
 
     public function testFetchAllUserBoardReturnsArray()
     {
         $boards = [
-            Mockery::mock(Board::class),
-            Mockery::mock(Board::class),
+            \Mockery::mock(Board::class),
+            \Mockery::mock(Board::class),
         ];
 
         $this->boardRepositoryMock
@@ -41,7 +40,7 @@ class BoardServiceTest extends MockeryTestCase
 
     public function testFetchBoardByIdReturnsBoard()
     {
-        $boardMock = Mockery::mock(Board::class);
+        $boardMock = \Mockery::mock(Board::class);
 
         $this->boardRepositoryMock
             ->expects('findOneBy')

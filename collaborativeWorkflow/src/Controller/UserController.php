@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\UserDto;
 use App\Formatter\UserFormatter;
 use App\Services\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/user')]
+#[Route('/users')]
 final class UserController extends AbstractController
 {
     private UserService $userService;
@@ -41,5 +42,11 @@ final class UserController extends AbstractController
         $user = $this->userService->fetchUserByUsername($username);
 
         return new JsonResponse($this->userFormatter->formatUser($user));
+    }
+
+    #[Route('/save', name: 'create_user', methods: ['POST'])]
+    public function createUser(UserDto $user): Response
+    {
+        return $this->userService->createUser($user);
     }
 }
