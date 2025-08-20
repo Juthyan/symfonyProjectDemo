@@ -10,7 +10,7 @@ A Symfony-based RESTful API for managing users, boards, and roles in a collabora
 - **Symfony 6+**
 - **PostgreSQL**
 - **Doctrine ORM**
-- **NelmioApiDocBundle** (OpenAPI/Swagger UI)
+- **OpenApi SwaggerUI**
 - **PHPUnit + Mockery** (unit testing)
 - **PHP-CS-Fixer** (code style)
 - **Twig** (optional, only if rendering HTML views)
@@ -18,20 +18,24 @@ A Symfony-based RESTful API for managing users, boards, and roles in a collabora
 ---
 
 ## 📁 Project Structure
-
+```
 src/
 ├── Controller/ # API controllers
 ├── Entity/ # Doctrine entities: User, Board, Role, UserRole, Task
 ├── Formatter/ # Formatters to transform entities into JSON-ready arrays
 ├── Repository/ # Custom repository logic
 ├── Services/ # Business logic layer
-config/
+
+public/
 ├── openapi/ # Custom OpenAPI spec (api_doc.yaml)
+
+config/
 ├── routes.yaml # Swagger UI & JSON spec exposure
+
 tests/
 ├── Formatter/ # Unit tests for formatters
 ├── Services/ # Unit tests for services
-
+```
 yaml
 Copier le code
 
