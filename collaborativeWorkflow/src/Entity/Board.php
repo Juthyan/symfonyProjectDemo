@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\BoardRepository;
@@ -66,7 +68,7 @@ class Board
     /**
      * Get the value of tasks.
      */
-    public function getTasks()
+    public function getTasks(): Collection
     {
         return $this->tasks;
     }
@@ -76,7 +78,7 @@ class Board
      *
      * @return self
      */
-    public function setTasks($tasks)
+    public function setTasks(Collection $tasks)
     {
         $this->tasks = $tasks;
 
