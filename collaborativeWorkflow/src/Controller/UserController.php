@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Formatter\UserFormatter;
@@ -22,7 +24,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('', name: 'app_user')]
-    public function fetchUsers(): Response
+    public function fetchAllUsers(): Response
     {
         $users = $this->userService->fetchUsers();
         $data = [];
