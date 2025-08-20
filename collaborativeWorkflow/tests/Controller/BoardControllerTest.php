@@ -8,7 +8,6 @@ use App\Controller\BoardController;
 use App\Entity\Board;
 use App\Formatter\BoardFormatter;
 use App\Services\BoardService;
-use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -16,15 +15,15 @@ final class BoardControllerTest extends MockeryTestCase
 {
     public function testFetchAllUserBoard(): void
     {
-        $boardMock = Mockery::mock(Board::class);
+        $boardMock = \Mockery::mock(Board::class);
         $formattedBoard = ['id' => 1, 'name' => 'Test Board', 'role' => []];
 
-        $boardServiceMock = Mockery::mock(BoardService::class);
+        $boardServiceMock = \Mockery::mock(BoardService::class);
         $boardServiceMock->expects('fetchAllUserBoard')
             ->once()
             ->andReturn([$boardMock]);
 
-        $boardFormatterMock = Mockery::mock(BoardFormatter::class);
+        $boardFormatterMock = \Mockery::mock(BoardFormatter::class);
         $boardFormatterMock->expects('formatBoard')
             ->once()
             ->with($boardMock)
@@ -40,16 +39,16 @@ final class BoardControllerTest extends MockeryTestCase
 
     public function testFetchBoard(): void
     {
-        $boardMock = Mockery::mock(Board::class);
+        $boardMock = \Mockery::mock(Board::class);
         $formattedBoard = ['id' => 1, 'name' => 'Test Board', 'role' => []];
 
-        $boardServiceMock = Mockery::mock(BoardService::class);
+        $boardServiceMock = \Mockery::mock(BoardService::class);
         $boardServiceMock->expects('fetchBoardById')
             ->once()
             ->with(1)
             ->andReturn($boardMock);
 
-        $boardFormatterMock = Mockery::mock(BoardFormatter::class);
+        $boardFormatterMock = \Mockery::mock(BoardFormatter::class);
         $boardFormatterMock->expects('formatBoard')
             ->once()
             ->with($boardMock)

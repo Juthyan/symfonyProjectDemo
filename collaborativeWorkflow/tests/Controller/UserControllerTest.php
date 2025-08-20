@@ -8,7 +8,6 @@ use App\Controller\UserController;
 use App\Entity\User;
 use App\Formatter\UserFormatter;
 use App\Services\UserService;
-use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -16,15 +15,15 @@ final class UserControllerTest extends MockeryTestCase
 {
     public function testFetchAllUsers(): void
     {
-        $userMock = Mockery::mock(User::class);
+        $userMock = \Mockery::mock(User::class);
         $formattedUser = ['id' => 1, 'username' => 'johndoe', 'role' => []];
 
-        $userServiceMock = Mockery::mock(UserService::class);
+        $userServiceMock = \Mockery::mock(UserService::class);
         $userServiceMock->expects('fetchUsers')
             ->once()
             ->andReturn([$userMock]);
 
-        $userFormatterMock = Mockery::mock(UserFormatter::class);
+        $userFormatterMock = \Mockery::mock(UserFormatter::class);
         $userFormatterMock->expects('formatUser')
             ->once()
             ->with($userMock)
@@ -40,16 +39,16 @@ final class UserControllerTest extends MockeryTestCase
 
     public function testFetchUser(): void
     {
-        $userMock = Mockery::mock(User::class);
+        $userMock = \Mockery::mock(User::class);
         $formattedUser = ['id' => 1, 'username' => 'johndoe', 'role' => []];
 
-        $userServiceMock = Mockery::mock(UserService::class);
+        $userServiceMock = \Mockery::mock(UserService::class);
         $userServiceMock->expects('fetchUserByUsername')
             ->once()
             ->with('johndoe')
             ->andReturn($userMock);
 
-        $userFormatterMock = Mockery::mock(UserFormatter::class);
+        $userFormatterMock = \Mockery::mock(UserFormatter::class);
         $userFormatterMock->expects('formatUser')
             ->once()
             ->with($userMock)

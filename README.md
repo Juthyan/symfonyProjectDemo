@@ -13,6 +13,7 @@ A Symfony-based RESTful API for managing users, boards, and roles in a collabora
 - **OpenApi SwaggerUI**
 - **PHPUnit + Mockery** (unit testing)
 - **PHP-CS-Fixer** (code style)
+- **PHP-Stan**
 - **Twig** (optional, only if rendering HTML views)
 
 ---
@@ -21,6 +22,7 @@ A Symfony-based RESTful API for managing users, boards, and roles in a collabora
 ```
 src/
 ├── Controller/ # API controllers
+├── DTO/
 ├── Entity/ # Doctrine entities: User, Board, Role, UserRole, Task
 ├── Formatter/ # Formatters to transform entities into JSON-ready arrays
 ├── Repository/ # Custom repository logic

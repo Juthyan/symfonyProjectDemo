@@ -5,30 +5,105 @@ info:
   version: 1.0.0
 
 paths:
-  /api/user/{username}:
+  /users:
     get:
-      summary: Get a user by username
+      summary: Fetch all users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/{username}:
+    get:
+      summary: Fetch a user by username
       parameters:
         - name: username
           in: path
           required: true
           schema:
             type: string
+          description: Username of the user to retrieve
       responses:
         '200':
           description: User found
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  username:
-                    type: string
-                  role:
-                    type: array
-                    items:
-                      type: string
+                $ref: '#/components/schemas/User'
         '404':
           description: User not found
+
+  /users/save:
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: User created
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Creation failed <error message>
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userName:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    UserDto:
+      type: object
+      required:
+        - userName
+        - mail
+      properties:
+        userName:
+          type: string
+          example: newuser
+          description: Username (letters, numbers, underscores only)
+        mail:
+          type: string
+          format: email
+          example: newuser@example.com
