@@ -76,7 +76,77 @@ paths:
                   status:
                     type: string
                     example: Creation failed <error message>
+  /boards:
+    get:
+      summary: Fetch all boards
+      responses:
+        '200':
+          description: List of boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Board'
 
+  /boards/{id}:
+    get:
+      summary: Fetch a board by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the board to retrieve
+      responses:
+        '200':
+          description: Board found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '404':
+          description: Board not found
+
+  /boards/save:
+    post:
+      summary: Create a new board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoardDto'
+      responses:
+        '201':
+          description: Board created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Board created
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Creation failed <error message>
 components:
   schemas:
     User:
@@ -107,3 +177,56 @@ components:
           type: string
           format: email
           example: newuser@example.com
+    
+    Board:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        name:
+          type: string
+          example: My Board
+        userRoles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+
+    BoardDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: New Board
+
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        role:
+          type: string
+          example: admin
+        userId:
+          type: integer
+          example: 5
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 100
+        title:
+          type: string
+          example: Task Title
+        description:
+          type: string
+          example: Task details

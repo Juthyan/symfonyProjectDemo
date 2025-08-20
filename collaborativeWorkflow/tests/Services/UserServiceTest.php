@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Services;
 
-use App\Entity\User;
 use App\DTO\UserDto;
-use Mockery;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Services\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -65,7 +64,7 @@ class UserServiceTest extends MockeryTestCase
 
         // Expect entity manager methods to be called in this order
         $this->entityManagerMock->expects('beginTransaction')->once();
-        $this->entityManagerMock->expects('persist')->once()->with(Mockery::on(function ($user) use ($userDto) {
+        $this->entityManagerMock->expects('persist')->once()->with(\Mockery::on(function ($user) use ($userDto) {
             return $user instanceof User
                 && $user->getUsername() === $userDto->getUserName()
                 && $user->getEmail() === $userDto->getMail();

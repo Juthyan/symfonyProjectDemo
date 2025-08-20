@@ -7,17 +7,20 @@ namespace App\Tests\Services;
 use App\Entity\Board;
 use App\Repository\BoardRepository;
 use App\Services\BoardService;
+use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 
 class BoardServiceTest extends MockeryTestCase
 {
     private $boardRepositoryMock;
+    private $entityManagerInterfaceMock;
     private BoardService $boardService;
 
     protected function setUp(): void
     {
         $this->boardRepositoryMock = \Mockery::mock(BoardRepository::class);
-        $this->boardService = new BoardService($this->boardRepositoryMock);
+        $this->entityManagerInterfaceMock = \Mockery::mock(EntityManagerInterface::class);
+        $this->boardService = new BoardService($this->boardRepositoryMock, $this->entityManagerInterfaceMock);
     }
 
     public function testFetchAllUserBoardReturnsArray()

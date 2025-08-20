@@ -109,7 +109,7 @@ class UserDtoResolverTest extends TestCase
         $this->expectException(BadRequestHttpException::class);
         $this->expectExceptionMessage(json_encode([
             'userName' => 'Username must be at least 3 characters.',
-            'mail' => 'The email invalid-email is not valid.'
+            'mail' => 'The email invalid-email is not valid.',
         ]));
 
         iterator_to_array($this->resolver->resolve($request, $argument));
