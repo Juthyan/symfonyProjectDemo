@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\BoardDto;
 use App\Formatter\BoardFormatter;
 use App\Services\BoardService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/board')]
+#[Route('/boards')]
 final class BoardController extends AbstractController
 {
     private BoardService $boardService;
@@ -41,5 +42,11 @@ final class BoardController extends AbstractController
         $board = $this->boardService->fetchBoardById($id);
 
         return new JsonResponse($this->boardFormatter->formatBoard($board));
+    }
+
+    #[Route('/save', name: 'create_board', methods: ['POST'])]
+    public function createBoard(BoardDto $boardDto): Response
+    {
+        return $this->boardService->createBoard($boardDto);
     }
 }
