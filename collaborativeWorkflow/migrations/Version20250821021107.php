@@ -19,6 +19,8 @@ final class Version20250821021107 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->addSql('TRUNCATE TABLE role RESTART IDENTITY CASCADE');
+
         $this->addSql("INSERT INTO role (name, can_edit, can_delete, can_invite) VALUES ('admin', true, true, true)");
         $this->addSql("INSERT INTO role (name, can_edit, can_delete, can_invite) VALUES ('editor', true, false, false)");
         $this->addSql("INSERT INTO role (name, can_edit, can_delete, can_invite) VALUES ('viewer', false, false, false)");
