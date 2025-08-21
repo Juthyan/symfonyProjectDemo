@@ -63,6 +63,15 @@ final class Version20250818225526 extends AbstractMigration
         $this->addSql('ALTER TABLE user_role ADD CONSTRAINT FK_2DE8C6A3A76ED395 FOREIGN KEY (user_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE user_role ADD CONSTRAINT FK_2DE8C6A3D60322AC FOREIGN KEY (role_id) REFERENCES role (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE user_settings ADD CONSTRAINT FK_5C844C5A76ED395 FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE');
+
+        // After creating sequences and tables
+        $this->addSql("ALTER TABLE board ALTER COLUMN id SET DEFAULT nextval('board_id_seq')");
+        $this->addSql("ALTER TABLE role ALTER COLUMN id SET DEFAULT nextval('role_id_seq')");
+        $this->addSql("ALTER TABLE task ALTER COLUMN id SET DEFAULT nextval('task_id_seq')");
+        $this->addSql("ALTER TABLE task_state ALTER COLUMN id SET DEFAULT nextval('task_state_id_seq')");
+        $this->addSql("ALTER TABLE \"user\" ALTER COLUMN id SET DEFAULT nextval('user_id_seq')");
+        $this->addSql("ALTER TABLE user_role ALTER COLUMN id SET DEFAULT nextval('user_role_id_seq')");
+        $this->addSql("ALTER TABLE user_settings ALTER COLUMN id SET DEFAULT nextval('user_settings_id_seq')");
     }
 
     public function down(Schema $schema): void
