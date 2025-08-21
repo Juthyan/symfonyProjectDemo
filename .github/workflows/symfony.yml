@@ -55,6 +55,26 @@ jobs:
       working-directory: collaborativeWorkflow
       run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --verbose
 
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        until pg_isready -h localhost -p 5432; do
+          echo "Waiting for postgres..."
+          sleep 1
+        done
+
+    - name: Drop existing database
+      env:
+        PGPASSWORD: postgres
+      run: |
+        psql -U yjudith -h localhost -c "DROP DATABASE IF EXISTS collaborative_workflow;"
+    
+    - name: Create database
+      env:
+        PGPASSWORD: postgres
+      run: |
+        psql -U yjudith -h localhost -c "CREATE DATABASE collaborative_workflow;"
+
+
     - name: Run Doctrine Migrations
       working-directory: collaborativeWorkflow
       env:
