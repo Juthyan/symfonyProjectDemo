@@ -62,12 +62,12 @@ jobs:
         done
     - name: Drop existing database
       env:
-        PGPASSWORD: postgres
+        PGPASSWORD: password
       run: |
         psql -U yjudith -h localhost -c "DROP DATABASE IF EXISTS collaborative_workflow;"
     - name: Create database
       env:
-        PGPASSWORD: postgres
+        PGPASSWORD: password
       run: |
         psql -U yjudith -h localhost -c "CREATE DATABASE collaborative_workflow;"
     - name: Run Doctrine Migrations
