@@ -4,55 +4,98 @@ declare(strict_types=1);
 
 namespace App\Tests\Services;
 
+use App\DTO\BoardDto;
 use App\Entity\Board;
+use App\Entity\User;
 use App\Repository\BoardRepository;
+use App\Repository\UserRepository;
 use App\Services\BoardService;
+use App\Services\UserRoleService;
 use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
+use Mockery as m;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class BoardServiceTest extends MockeryTestCase
 {
-    private $boardRepositoryMock;
-    private $entityManagerInterfaceMock;
+    private $boardRepository;
+    private $userRepository;
+    private $entityManager;
+    private $userRoleService;
     private BoardService $boardService;
 
     protected function setUp(): void
     {
-        $this->boardRepositoryMock = \Mockery::mock(BoardRepository::class);
-        $this->entityManagerInterfaceMock = \Mockery::mock(EntityManagerInterface::class);
-        $this->boardService = new BoardService($this->boardRepositoryMock, $this->entityManagerInterfaceMock);
+        $this->boardRepository = m::mock(BoardRepository::class);
+        $this->userRepository = m::mock(UserRepository::class);
+        $this->entityManager = m::mock(EntityManagerInterface::class);
+        $this->userRoleService = m::mock(UserRoleService::class);
+
+        $this->boardService = new BoardService(
+            $this->boardRepository,
+            $this->userRepository,
+            $this->entityManager,
+            $this->userRoleService
+        );
     }
 
-    public function testFetchAllUserBoardReturnsArray()
+    public function testCreateBoardSuccess()
     {
-        $boards = [
-            \Mockery::mock(Board::class),
-            \Mockery::mock(Board::class),
-        ];
+        $dto = new BoardDto('Test Board');
 
-        $this->boardRepositoryMock
-            ->expects('findAll')
-            ->once()
-            ->andReturn($boards);
+        $user = m::mock(User::class);
 
-        $result = $this->boardService->fetchAllUserBoard();
+        // Expect beginTransaction, persist, flush, commit to be called once
+        $this->entityManager->expects('beginTransaction')->once();
+        $this->entityManager->expects('persist')->once()->with(m::type(Board::class));
+        $this->entityManager->expects('flush')->once();
+        $this->entityManager->expects('commit')->once();
 
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
+        // Expect rollback never called on success
+        $this->entityManager->expects('rollback')->never();
+
+        // Expect userRepository->findOneBy(['id' => 1]) called and returns user mock
+        $this->userRepository->expects('findOneBy')->once()->with(['id' => 1])->andReturn($user);
+
+        // Expect userRoleService->linkBoardToUser called once with Board and User
+        $this->userRoleService->expects('linkBoardToUser')->once()->with(
+            m::type(Board::class),
+            $user
+        );
+
+        $response = $this->boardService->createBoard($dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(201, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertEquals('Board created', $data['status']);
     }
 
-    public function testFetchBoardByIdReturnsBoard()
+    public function testCreateBoardFailureRollsBack()
     {
-        $boardMock = \Mockery::mock(Board::class);
+        $dto = new BoardDto('Test Board');
 
-        $this->boardRepositoryMock
-            ->expects('findOneBy')
-            ->with(['id' => 123])
-            ->once()
-            ->andReturn($boardMock);
+        $this->entityManager->expects('beginTransaction')->once();
+        $this->entityManager->expects('persist')->once()->with(m::type(Board::class));
 
-        $result = $this->boardService->fetchBoardById(123);
+        // Simulate exception during flush
+        $this->entityManager->expects('commit')->never();
+        $this->entityManager->expects('rollback')->once();
 
-        $this->assertSame($boardMock, $result);
+        // Throw an exception when flush is called
+        $this->entityManager->expects('flush')->andThrow(new \Exception('DB error'));
+
+        // userRepository and userRoleService should not be called due to exception
+        $this->userRepository->expects('findOneBy')->never();
+        $this->userRoleService->expects('linkBoardToUser')->never();
+
+        $response = $this->boardService->createBoard($dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(500, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('Creation failed', $data['status']);
     }
 }
