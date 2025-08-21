@@ -64,7 +64,7 @@ jobs:
       env:
         PGPASSWORD: password
       run: |
-        ppsql -U yjudith -h localhost -d postgres -c "DROP DATABASE IF EXISTS collaborative_workflow;"
+        psql -U yjudith -h localhost -d postgres -c "DROP DATABASE IF EXISTS collaborative_workflow;"
     - name: Create database
       env:
         PGPASSWORD: password
