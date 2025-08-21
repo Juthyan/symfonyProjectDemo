@@ -64,12 +64,12 @@ jobs:
       env:
         PGPASSWORD: password
       run: |
-        psql -U yjudith -h localhost -c "DROP DATABASE IF EXISTS collaborative_workflow;"
+        ppsql -U yjudith -h localhost -d postgres -c "DROP DATABASE IF EXISTS collaborative_workflow;"
     - name: Create database
       env:
         PGPASSWORD: password
       run: |
-        psql -U yjudith -h localhost -c "CREATE DATABASE collaborative_workflow;"
+        psql -U yjudith -h localhost -d postgres -c "CREATE DATABASE collaborative_workflow;"
     - name: Run Doctrine Migrations
       working-directory: collaborativeWorkflow
       env:
