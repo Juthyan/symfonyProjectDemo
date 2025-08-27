@@ -49,4 +49,16 @@ final class BoardController extends AbstractController
     {
         return $this->boardService->createBoard($boardDto);
     }
+
+    #[Route('/edit/{id}', name: 'edit_board', methods: ['PUT'])]
+    public function editBoard(int $id, BoardDto $dto): Response
+    {
+        return $this->boardService->editBoard($id, $dto);
+    }
+
+    #[Route('/delete/{id}', name: 'delete_board', methods: ['DELETE'])]
+    public function deleteBoard(int $id): Response
+    {
+        return $this->boardService->deleteBoard($id);
+    }
 }
