@@ -202,6 +202,10 @@ class BoardServiceTest extends MockeryTestCase
             ->once()
             ->with($board);
 
+        $this->entityManager
+        ->expects('flush')
+        ->once();
+
         $response = $this->boardService->deleteBoard(1);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
