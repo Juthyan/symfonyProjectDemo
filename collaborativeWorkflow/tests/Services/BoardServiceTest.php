@@ -9,12 +9,15 @@ use App\Entity\Board;
 use App\Entity\User;
 use App\Repository\BoardRepository;
 use App\Repository\UserRepository;
+use App\Repository\UserRoleRepository;
 use App\Services\BoardService;
 use App\Services\UserRoleService;
 use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Mockery as m;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Doctrine\Common\Collections\ArrayCollection;
+
 
 class BoardServiceTest extends MockeryTestCase
 {
@@ -22,6 +25,7 @@ class BoardServiceTest extends MockeryTestCase
     private $userRepository;
     private $entityManager;
     private $userRoleService;
+    private $userRoleRepository;
     private BoardService $boardService;
 
     protected function setUp(): void
@@ -30,12 +34,14 @@ class BoardServiceTest extends MockeryTestCase
         $this->userRepository = m::mock(UserRepository::class);
         $this->entityManager = m::mock(EntityManagerInterface::class);
         $this->userRoleService = m::mock(UserRoleService::class);
+        $this->userRoleRepository = m::mock(UserRoleRepository::class);
 
         $this->boardService = new BoardService(
             $this->boardRepository,
             $this->userRepository,
             $this->entityManager,
-            $this->userRoleService
+            $this->userRoleService,
+            $this->userRoleRepository
         );
     }
 
@@ -97,5 +103,135 @@ class BoardServiceTest extends MockeryTestCase
 
         $data = json_decode($response->getContent(), true);
         $this->assertStringContainsString('Creation failed', $data['status']);
+    }
+
+    public function testEditBoardSuccessWithUserRoles()
+    {
+        $dto = new BoardDto('Updated Name', [1, 2]);
+        $board = m::mock(Board::class);
+        $userRole1 = m::mock();
+        $userRole2 = m::mock();
+
+        $this->boardRepository
+            ->expects('findOneBy')
+            ->once()
+            ->with(['id' => 123])
+            ->andReturn($board);
+
+        $board->shouldReceive('setName')->once()->with('Updated Name');
+        $this->userRoleRepository
+            ->expects('findBy')
+            ->once()
+            ->with(['id' => [1, 2]])
+            ->andReturn([$userRole1, $userRole2]);
+
+        $board->shouldReceive('setUserRoles')->once()->with(m::type(ArrayCollection::class));
+
+        $this->entityManager->expects('beginTransaction')->once();
+        $this->entityManager->expects('persist')->once()->with($board);
+        $this->entityManager->expects('flush')->once();
+        $this->entityManager->expects('commit')->once();
+
+        $response = $this->boardService->editBoard(123, $dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(200, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertEquals('Board edited', $data['status']);
+    }
+
+    public function testEditBoardNotFound()
+    {
+        $dto = new BoardDto('Updated Name');
+
+        $this->boardRepository
+            ->expects('findOneBy')
+            ->once()
+            ->with(['id' => 999])
+            ->andReturn(null);
+
+        $response = $this->boardService->editBoard(999, $dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(404, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertEquals('Board not found', $data['status']);
+    }
+
+    public function testEditBoardThrowsException()
+    {
+        $dto = new BoardDto('Updated Name');
+        $board = m::mock(Board::class);
+
+        $this->boardRepository
+            ->shouldReceive('findOneBy')
+            ->once()
+            ->with(['id' => 456])
+            ->andReturn($board);
+
+        $board->shouldReceive('setName')->once()->with('Updated Name');
+
+        $this->entityManager->expects('beginTransaction')->once();
+        $this->entityManager->expects('persist')->once()->with($board);
+        $this->entityManager->expects('flush')->once()->andThrow(new \Exception('Save failed'));
+        $this->entityManager->expects('rollback')->once();
+
+        $response = $this->boardService->editBoard(456, $dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(500, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('Edit failed', $data['status']);
+    }
+
+    public function testDeleteBoardSuccess()
+    {
+        $board = m::mock(Board::class);
+
+        $this->boardRepository
+            ->expects('findOneBy')
+            ->once()
+            ->with(['id' => 1])
+            ->andReturn($board);
+
+        $this->entityManager
+            ->expects('remove')
+            ->once()
+            ->with($board);
+
+        $response = $this->boardService->deleteBoard(1);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(204, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertEquals('Board deleted', $data['status']);
+    }
+    public function testDeleteBoardFailure()
+    {
+        $board = m::mock(Board::class);
+
+        $this->boardRepository
+            ->expects('findOneBy')
+            ->once()
+            ->with(['id' => 2])
+            ->andReturn($board);
+
+        $this->entityManager
+            ->expects('remove')
+            ->once()
+            ->with($board)
+            ->andThrow(new \Exception('Delete failed'));
+
+        $response = $this->boardService->deleteBoard(2);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(500, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('Delete failed', $data['status']);
     }
 }
