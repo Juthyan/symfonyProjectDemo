@@ -12,12 +12,11 @@ use App\Repository\UserRepository;
 use App\Repository\UserRoleRepository;
 use App\Services\BoardService;
 use App\Services\UserRoleService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Mockery as m;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Doctrine\Common\Collections\ArrayCollection;
-
 
 class BoardServiceTest extends MockeryTestCase
 {
@@ -214,6 +213,7 @@ class BoardServiceTest extends MockeryTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertEquals('Board deleted', $data['status']);
     }
+
     public function testDeleteBoardFailure()
     {
         $board = m::mock(Board::class);

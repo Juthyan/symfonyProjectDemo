@@ -10,6 +10,7 @@ use App\Services\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/users')]
@@ -45,8 +46,20 @@ final class UserController extends AbstractController
     }
 
     #[Route('/save', name: 'create_user', methods: ['POST'])]
-    public function createUser(UserDto $user): Response
+    public function createUser(#[MapRequestPayload] UserDto $user): Response
     {
         return $this->userService->createUser($user);
+    }
+
+    #[Route('/edit/{id}', name: 'edit_user', methods: ['PUT'])]
+    public function editUser(int $id, #[MapRequestPayload] UserDto $dto): JsonResponse
+    {
+        return $this->userService->editUser($id, $dto);
+    }
+
+    #[Route('/{id}', name: 'delete_user', methods: ['DELETE'])]
+    public function deleteUser(int $id): JsonResponse
+    {
+        return $this->userService->deleteUser($id);
     }
 }

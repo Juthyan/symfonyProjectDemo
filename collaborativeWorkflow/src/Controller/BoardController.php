@@ -10,6 +10,7 @@ use App\Services\BoardService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/boards')]
@@ -45,18 +46,18 @@ final class BoardController extends AbstractController
     }
 
     #[Route('/save', name: 'create_board', methods: ['POST'])]
-    public function createBoard(BoardDto $boardDto): Response
+    public function createBoard(#[MapRequestPayload] BoardDto $boardDto): Response
     {
         return $this->boardService->createBoard($boardDto);
     }
 
     #[Route('/edit/{id}', name: 'edit_board', methods: ['PUT'])]
-    public function editBoard(int $id, BoardDto $dto): Response
+    public function editBoard(int $id, #[MapRequestPayload] BoardDto $dto): Response
     {
         return $this->boardService->editBoard($id, $dto);
     }
 
-    #[Route('/delete/{id}', name: 'delete_board', methods: ['DELETE'])]
+    #[Route('/{id}', name: 'delete_board', methods: ['DELETE'])]
     public function deleteBoard(int $id): Response
     {
         return $this->boardService->deleteBoard($id);

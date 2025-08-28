@@ -17,6 +17,71 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+                  
+  /users/{id}:
+    put:
+      summary: Update a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: User updated
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+
+    delete:
+      summary: Delete a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user to delete
+      responses:
+        '204':
+          description: User deleted successfully (no content)
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Deletion failed <error message>
 
   /users/{username}:
     get:
@@ -108,7 +173,31 @@ paths:
                 $ref: '#/components/schemas/Board'
         '404':
           description: Board not found
-
+    delete:
+      summary: Delete a board by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the board to delete
+      responses:
+        '204':
+          description: Board deleted successfully (no content)
+        '404':
+          description: Board not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Deletion failed <error message>
+  
   /boards/save:
     post:
       summary: Create a new board
@@ -147,6 +236,54 @@ paths:
                   status:
                     type: string
                     example: Creation failed <error message>
+  
+  /boards/edit/{id}:
+    put:
+      summary: Update an existing board
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the board to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoardDto'
+      responses:
+        '200':
+          description: Board updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Board updated
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '404':
+          description: Board not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Update failed <error message>
 components:
   schemas:
     User:

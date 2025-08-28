@@ -11,7 +11,6 @@ use App\Repository\UserRepository;
 use App\Repository\UserRoleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class BoardService
@@ -62,15 +61,14 @@ class BoardService
     public function editBoard(int $id, BoardDto $dto): JsonResponse
     {
         $board = $this->boardRepository->findOneBy(['id' => $id]);
-        
+
         if (!$board) {
             return new JsonResponse(['status' => 'Board not found'], 404);
         }
 
         $board->setName($dto->name);
-        
-        if (!empty($dto->userRoleIds)) 
-        {
+
+        if (!empty($dto->userRoleIds)) {
             $userRoleIds = $dto->userRoleIds;
             $userRoles = $this->userRoleRepository->findBy(['id' => $userRoleIds]);
             $board->setUserRoles(new ArrayCollection($userRoles));
@@ -78,6 +76,7 @@ class BoardService
 
         try {
             $this->saveBoard($board);
+
             return new JsonResponse(['status' => 'Board edited'], 200);
         } catch (\Throwable $e) {
             return new JsonResponse(['status' => 'Edit failed: '.$e->getMessage()], 500);
@@ -90,8 +89,9 @@ class BoardService
         try {
             $this->entityManager->remove($board);
             $this->entityManager->flush();
+
             return new JsonResponse(['status' => 'Board deleted'], 204);
-        }catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse(['status' => 'Delete failed: '.$e->getMessage()], 500);
         }
     }
@@ -108,5 +108,4 @@ class BoardService
             throw $e;
         }
     }
-
 }
