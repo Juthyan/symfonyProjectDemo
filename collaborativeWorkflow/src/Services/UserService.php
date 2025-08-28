@@ -7,19 +7,22 @@ namespace App\Services;
 use App\DTO\UserDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Repository\UserRoleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserService
 {
     private UserRepository $userRepository;
-
     private EntityManagerInterface $entityManager;
+    private UserRoleRepository $userRoleRepository;
 
-    public function __construct(UserRepository $userRepository, EntityManagerInterface $entityManager)
+    public function __construct(UserRepository $userRepository, EntityManagerInterface $entityManager, UserRoleRepository $userRoleRepository)
     {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
+        $this->userRoleRepository = $userRoleRepository;
     }
 
     public function fetchUsers(): array
@@ -36,8 +39,63 @@ class UserService
     {
         $user = new User();
         $user->setUsername($userDto->getUserName());
-        $user->setEmail($userDto->getMail());
+        $user->setMail($userDto->getMail());
 
+        try {
+            $this->saveUser($user);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['status' => 'Creation failed '.$e->getMessage()], 500);
+        }
+
+        return new JsonResponse(['status' => 'User created'], 201);
+    }
+
+    public function editUser(int $id, UserDto $dto): JsonResponse
+    {
+        $user = $this->userRepository->findOneBy(['id' => $id]);
+
+        if (!$user) {
+            return new JsonResponse(['status' => 'User not found'], 404);
+        }
+
+        $user->setUserName($dto->getUserName());
+        $user->setMail($dto->getMail());
+
+        if (!empty($dto->userRoleIds)) {
+            $userRoleIds = $dto->userRoleIds;
+            $userRoles = $this->userRoleRepository->findBy(['id' => $userRoleIds]);
+            $user->setUserRoles(new ArrayCollection($userRoles));
+        }
+
+        try {
+            $this->saveUser($user);
+
+            return new JsonResponse(['status' => 'User updated'], 200);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['status' => 'Update failed: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function deleteUser(int $id): JsonResponse
+    {
+        $user = $this->userRepository->findOneBy(['id' => $id]);
+
+        if (!$user) {
+            return new JsonResponse(['status' => 'User not found'], 404);
+        }
+
+        try {
+            $this->entityManager->remove($user);
+            $this->entityManager->flush();
+
+            return new JsonResponse(['status' => 'User deleted'], 204);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['status' => 'Creation failed '.$e->getMessage()], 500);
+        }
+    }
+
+    private function saveUser(User $user): void
+    {
         try {
             $this->entityManager->beginTransaction();
             $this->entityManager->persist($user);
@@ -45,10 +103,7 @@ class UserService
             $this->entityManager->commit();
         } catch (\Throwable $e) {
             $this->entityManager->rollback();
-
-            return new JsonResponse(['status' => 'Creation failed '.$e->getMessage()], 500);
+            throw $e;
         }
-
-        return new JsonResponse(['status' => 'User created'], 201);
     }
 }

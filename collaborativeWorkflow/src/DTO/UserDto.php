@@ -17,10 +17,19 @@ class UserDto
     #[Assert\Email(message: 'The email {{ value }} is not a valid email.')]
     private string $mail;
 
-    public function __construct(string $userName, string $mail)
+    /**
+     * @var int[]
+     */
+    #[Assert\All([
+        new Assert\Type('integer'),
+    ])]
+    public array $userRoleIds = [];
+
+    public function __construct(string $userName, string $mail, array $userRoleIds = [])
     {
         $this->userName = $userName;
         $this->mail = $mail;
+        $this->userRoleIds = $userRoleIds;
     }
 
     public function getMail(): string
@@ -31,5 +40,10 @@ class UserDto
     public function getUserName(): string
     {
         return $this->userName;
+    }
+
+    public function getUserRoleIds(): array
+    {
+        return $this->userRoleIds;
     }
 }
