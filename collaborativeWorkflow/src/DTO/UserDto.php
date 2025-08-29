@@ -17,6 +17,15 @@ class UserDto
     #[Assert\Email(message: 'The email {{ value }} is not a valid email.')]
     private string $mail;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 8)]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit.'
+    )]
+    #[Assert\NotCompromisedPassword]
+    private string $password;
+
     /**
      * @var int[]
      */
@@ -25,10 +34,11 @@ class UserDto
     ])]
     public array $userRoleIds = [];
 
-    public function __construct(string $userName, string $mail, array $userRoleIds = [])
+    public function __construct(string $userName, string $mail, string $password, array $userRoleIds = [])
     {
         $this->userName = $userName;
         $this->mail = $mail;
+        $this->password = $password;
         $this->userRoleIds = $userRoleIds;
     }
 
@@ -40,6 +50,11 @@ class UserDto
     public function getUserName(): string
     {
         return $this->userName;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
     }
 
     public function getUserRoleIds(): array

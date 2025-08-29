@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 #[Route('/users')]
 final class UserController extends AbstractController
@@ -46,7 +48,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/save', name: 'create_user', methods: ['POST'])]
-    public function createUser(#[MapRequestPayload] UserDto $user): Response
+    public function createUser(UserPasswordHasherInterface $passwordHasher, #[MapRequestPayload] UserDto $user): Response
     {
         return $this->userService->createUser($user);
     }
