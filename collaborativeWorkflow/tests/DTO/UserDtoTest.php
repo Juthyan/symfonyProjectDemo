@@ -13,10 +13,12 @@ class UserDtoTest extends TestCase
     {
         $userName = 'valid_user123';
         $email = 'valid@example.com';
+        $password = 'test';
 
-        $userDto = new UserDto($userName, $email);
+        $userDto = new UserDto($userName, $email, $password);
 
         $this->assertSame($userName, $userDto->getUserName());
         $this->assertSame($email, $userDto->getMail());
+        $this->assertSame($password, $userDto->getPassword());
     }
 }

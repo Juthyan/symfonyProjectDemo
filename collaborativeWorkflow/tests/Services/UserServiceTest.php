@@ -14,12 +14,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Mockery as m;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserServiceTest extends MockeryTestCase
 {
     private $userRepositoryMock;
     private $entityManagerMock;
     private $userRoleRepository;
+    private $passwordHasherInterfaceMock;
 
     private UserService $userService;
 
@@ -28,7 +30,8 @@ class UserServiceTest extends MockeryTestCase
         $this->userRepositoryMock = m::mock(UserRepository::class);
         $this->entityManagerMock = m::mock(EntityManagerInterface::class);
         $this->userRoleRepository = m::mock(UserRoleRepository::class);
-        $this->userService = new UserService($this->userRepositoryMock, $this->entityManagerMock, $this->userRoleRepository);
+        $this->passwordHasherInterfaceMock = m::mock(UserPasswordHasherInterface::class);
+        $this->userService = new UserService($this->userRepositoryMock, $this->entityManagerMock, $this->userRoleRepository, $this->passwordHasherInterfaceMock);
     }
 
     public function testFetchUsersReturnsArray()
@@ -66,7 +69,8 @@ class UserServiceTest extends MockeryTestCase
 
     public function testCreateUserSuccess()
     {
-        $userDto = new UserDto('testuser', 'test@example.com');
+        $userDto = new UserDto('testuser', 'test@example.com', 'test');
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
 
         // Expect entity manager methods to be called in this order
         $this->entityManagerMock->expects('beginTransaction')->once();
@@ -75,6 +79,7 @@ class UserServiceTest extends MockeryTestCase
                 && $user->getUsername() === $userDto->getUserName()
                 && $user->getEmail() === $userDto->getMail();
         }));
+
         $this->entityManagerMock->expects('flush')->once();
         $this->entityManagerMock->expects('commit')->once();
 
@@ -87,7 +92,8 @@ class UserServiceTest extends MockeryTestCase
 
     public function testCreateUserFailure()
     {
-        $userDto = new UserDto('failuser', 'fail@example.com');
+        $userDto = new UserDto('failuser', 'fail@example.com', 'test');
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
 
         $this->entityManagerMock->expects('beginTransaction')->once();
         $this->entityManagerMock->expects('persist')->once()->andThrow(new \Exception('DB error'));
@@ -107,6 +113,7 @@ class UserServiceTest extends MockeryTestCase
         $dto->userRoleIds = [1, 2];
         $dto->expects('getUserName')->once()->andReturn('john_doe');
         $dto->expects('getMail')->once()->andReturn('john@example.com');
+        $dto->expects('getPassword')->once()->andReturn(null);
 
         $user = m::mock(User::class);
 
@@ -143,6 +150,54 @@ class UserServiceTest extends MockeryTestCase
 
         $data = json_decode($response->getContent(), true);
         $this->assertEquals('User updated', $data['status']);
+    }
+
+    public function testEditUserFailure()
+    {
+        $dto = m::mock(UserDto::class);
+        $dto->userRoleIds = [1, 2];
+        $dto->expects('getUserName')->once()->andReturn('john_doe');
+        $dto->expects('getMail')->once()->andReturn('john@example.com');
+        $dto->expects('getPassword')->twice()->andReturn('test');
+
+        $user = m::mock(User::class);
+
+        $this->userRepositoryMock
+            ->expects('findOneBy')
+            ->once()
+            ->with(['id' => 3])
+            ->andReturn($user);
+
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
+        $user->expects('setUserName')->once()->with('john_doe');
+        $user->expects('setMail')->once()->with('john@example.com');
+        $user->expects('setPassword')->once()->with('test');
+
+        $userRole1 = m::mock(UserRole::class);
+        $userRole2 = m::mock(UserRole::class);
+
+        $this->userRoleRepository
+            ->expects('findBy')
+            ->once()
+            ->with(['id' => [1, 2]])
+            ->andReturn([$userRole1, $userRole2]);
+
+        $user->expects('setUserRoles')->once()->with(m::type(\Doctrine\Common\Collections\ArrayCollection::class));
+
+        $this->entityManagerMock->expects('beginTransaction')->once();
+        $this->entityManagerMock->expects('persist')->once()->with(m::type(User::class));
+        // Here, simulate an exception when flush is called
+        $this->entityManagerMock->expects('flush')->once()->andThrow(new \Exception('Save failed'));
+        $this->entityManagerMock->expects('rollback')->once();
+        $this->entityManagerMock->expects('commit')->never();
+
+        $response = $this->userService->editUser(3, $dto);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(500, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('Update failed: Save failed', $data['status']);
     }
 
     public function testEditUserNotFound()
