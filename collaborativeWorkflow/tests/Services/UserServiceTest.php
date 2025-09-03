@@ -12,14 +12,16 @@ use App\Repository\UserRoleRepository;
 use App\Services\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Mockery as m;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserServiceTest extends MockeryTestCase
 {
     private $userRepositoryMock;
     private $entityManagerMock;
     private $userRoleRepository;
+    private $passwordHasherInterfaceMock;
 
     private UserService $userService;
 
@@ -28,14 +30,15 @@ class UserServiceTest extends MockeryTestCase
         $this->userRepositoryMock = m::mock(UserRepository::class);
         $this->entityManagerMock = m::mock(EntityManagerInterface::class);
         $this->userRoleRepository = m::mock(UserRoleRepository::class);
-        $this->userService = new UserService($this->userRepositoryMock, $this->entityManagerMock, $this->userRoleRepository);
+        $this->passwordHasherInterfaceMock = m::mock(UserPasswordHasherInterface::class);
+        $this->userService = new UserService($this->userRepositoryMock, $this->entityManagerMock, $this->userRoleRepository, $this->passwordHasherInterfaceMock);
     }
 
     public function testFetchUsersReturnsArray()
     {
         $users = [
-            \Mockery::mock(User::class),
-            \Mockery::mock(User::class),
+            m::mock(User::class),
+            m::mock(User::class),
         ];
 
         $this->userRepositoryMock
@@ -51,7 +54,7 @@ class UserServiceTest extends MockeryTestCase
 
     public function testFetchUserByUsernameReturnsUser()
     {
-        $userMock = \Mockery::mock(User::class);
+        $userMock = m::mock(User::class);
 
         $this->userRepositoryMock
             ->expects('findOneBy')
@@ -66,15 +69,17 @@ class UserServiceTest extends MockeryTestCase
 
     public function testCreateUserSuccess()
     {
-        $userDto = new UserDto('testuser', 'test@example.com');
+        $userDto = new UserDto('testuser', 'test@example.com', 'test');
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
 
         // Expect entity manager methods to be called in this order
         $this->entityManagerMock->expects('beginTransaction')->once();
-        $this->entityManagerMock->expects('persist')->once()->with(\Mockery::on(function ($user) use ($userDto) {
+        $this->entityManagerMock->expects('persist')->once()->with(m::on(function ($user) use ($userDto) {
             return $user instanceof User
                 && $user->getUsername() === $userDto->getUserName()
                 && $user->getEmail() === $userDto->getMail();
         }));
+
         $this->entityManagerMock->expects('flush')->once();
         $this->entityManagerMock->expects('commit')->once();
 
@@ -87,7 +92,8 @@ class UserServiceTest extends MockeryTestCase
 
     public function testCreateUserFailure()
     {
-        $userDto = new UserDto('failuser', 'fail@example.com');
+        $userDto = new UserDto('failuser', 'fail@example.com', 'test');
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
 
         $this->entityManagerMock->expects('beginTransaction')->once();
         $this->entityManagerMock->expects('persist')->once()->andThrow(new \Exception('DB error'));
@@ -107,6 +113,7 @@ class UserServiceTest extends MockeryTestCase
         $dto->userRoleIds = [1, 2];
         $dto->expects('getUserName')->once()->andReturn('john_doe');
         $dto->expects('getMail')->once()->andReturn('john@example.com');
+        $dto->expects('getPassword')->once()->andReturn(null);
 
         $user = m::mock(User::class);
 
@@ -144,13 +151,14 @@ class UserServiceTest extends MockeryTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertEquals('User updated', $data['status']);
     }
-    
+
     public function testEditUserFailure()
     {
         $dto = m::mock(UserDto::class);
         $dto->userRoleIds = [1, 2];
         $dto->expects('getUserName')->once()->andReturn('john_doe');
         $dto->expects('getMail')->once()->andReturn('john@example.com');
+        $dto->expects('getPassword')->twice()->andReturn('test');
 
         $user = m::mock(User::class);
 
@@ -160,8 +168,10 @@ class UserServiceTest extends MockeryTestCase
             ->with(['id' => 3])
             ->andReturn($user);
 
+        $this->passwordHasherInterfaceMock->expects('hashPassword')->once()->andReturn('test');
         $user->expects('setUserName')->once()->with('john_doe');
         $user->expects('setMail')->once()->with('john@example.com');
+        $user->expects('setPassword')->once()->with('test');
 
         $userRole1 = m::mock(UserRole::class);
         $userRole2 = m::mock(UserRole::class);
@@ -208,8 +218,6 @@ class UserServiceTest extends MockeryTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertEquals('User not found', $data['status']);
     }
-
-    
 
     public function testDeleteUserSuccess()
     {

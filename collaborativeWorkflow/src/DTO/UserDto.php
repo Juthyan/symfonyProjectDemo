@@ -17,14 +17,15 @@ class UserDto
     #[Assert\Email(message: 'The email {{ value }} is not a valid email.')]
     private string $mail;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 8)]
+    #[Assert\NotBlank(groups: ['create'])]
+    #[Assert\Length(min: 8, groups: ['create', 'edit'])]
     #[Assert\Regex(
         pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit.'
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit.',
+        groups: ['create', 'edit']
     )]
-    #[Assert\NotCompromisedPassword]
-    private string $password;
+    #[Assert\NotCompromisedPassword(groups: ['create', 'edit'])]
+    private ?string $password;
 
     /**
      * @var int[]
@@ -52,7 +53,7 @@ class UserDto
         return $this->userName;
     }
 
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }

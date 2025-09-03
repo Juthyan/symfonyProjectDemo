@@ -1,6 +1,9 @@
-
 ###> phpstan/phpstan ###
 phpstan.neon
 ###< phpstan/phpstan ###
 
 test.php
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
