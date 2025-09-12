@@ -11,9 +11,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/users')]
+#[Route('/api/users')]
 final class UserController extends AbstractController
 {
     private UserService $userService;
@@ -46,13 +47,13 @@ final class UserController extends AbstractController
     }
 
     #[Route('/save', name: 'create_user', methods: ['POST'])]
-    public function createUser(#[MapRequestPayload] UserDto $user): Response
+    public function createUser(UserPasswordHasherInterface $passwordHasher, #[MapRequestPayload(validationGroups: ['create'])] UserDto $user): Response
     {
         return $this->userService->createUser($user);
     }
 
     #[Route('/edit/{id}', name: 'edit_user', methods: ['PUT'])]
-    public function editUser(int $id, #[MapRequestPayload] UserDto $dto): JsonResponse
+    public function editUser(int $id, #[MapRequestPayload(validationGroups: ['edit'])] UserDto $dto): JsonResponse
     {
         return $this->userService->editUser($id, $dto);
     }

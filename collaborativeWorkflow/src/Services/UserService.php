@@ -11,18 +11,21 @@ use App\Repository\UserRoleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserService
 {
     private UserRepository $userRepository;
     private EntityManagerInterface $entityManager;
     private UserRoleRepository $userRoleRepository;
+    private UserPasswordHasherInterface $passwordHasher;
 
-    public function __construct(UserRepository $userRepository, EntityManagerInterface $entityManager, UserRoleRepository $userRoleRepository)
+    public function __construct(UserRepository $userRepository, EntityManagerInterface $entityManager, UserRoleRepository $userRoleRepository, UserPasswordHasherInterface $passwordHasher)
     {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
         $this->userRoleRepository = $userRoleRepository;
+        $this->passwordHasher = $passwordHasher;
     }
 
     public function fetchUsers(): array
@@ -40,6 +43,9 @@ class UserService
         $user = new User();
         $user->setUsername($userDto->getUserName());
         $user->setMail($userDto->getMail());
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $userDto->getPassword());
+        $user->setPassword($hashedPassword);
 
         try {
             $this->saveUser($user);
@@ -60,6 +66,11 @@ class UserService
 
         $user->setUserName($dto->getUserName());
         $user->setMail($dto->getMail());
+
+        if ($dto->getPassword()) {
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword());
+            $user->setPassword($hashedPassword);
+        }
 
         if (!empty($dto->userRoleIds)) {
             $userRoleIds = $dto->userRoleIds;
