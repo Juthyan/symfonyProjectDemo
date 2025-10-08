@@ -52,7 +52,7 @@ final class UserController extends AbstractController
         return $this->userService->createUser($user);
     }
 
-    #[Route('/edit/{id}', name: 'edit_user', methods: ['PUT'])]
+    #[Route('/edit/{id}', name: 'edit_user', methods: ['PATCH'])]
     public function editUser(int $id, #[MapRequestPayload(validationGroups: ['edit'])] UserDto $dto): JsonResponse
     {
         return $this->userService->editUser($id, $dto);

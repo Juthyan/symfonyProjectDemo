@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Utils;
 
 final class Sanitizer
 {
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Sanitize a generic text field (e.g., descriptions, comments).
      */
     public static function sanitizeText(?string $text): ?string
     {
-        if ($text === null) {
+        if (null === $text) {
             return null;
         }
 

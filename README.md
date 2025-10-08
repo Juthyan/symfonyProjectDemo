@@ -160,6 +160,8 @@ Containerization (Docker): Create an optimized (multi-stage) Dockerfile for the 
 
 Deployment on GCP Cloud Run: Set up CI/CD and gcloud commands to deploy the Docker image on Google Cloud Run.
 
+I18n
+
 🧑‍💻 Author
 Yann
 Open to contributions, improvements, and feedback!

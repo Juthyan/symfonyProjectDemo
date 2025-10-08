@@ -1,13 +1,57 @@
 openapi: 3.0.0
 info:
-  title: My App API
-  description: API documentation for My App
+  title: Collaborative workflow
+  description: API documentation for the Symfony-based task management system, secured with JWT
   version: 1.0.0
 
+servers:
+  - url: http://localhost:8000/api
+    description: Environnement de développement local (via le serveur PHP Symfony)
+
 paths:
+  /api/login_check:
+    post:
+      summary: Authentification et récupération du jeton JWT
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@test.com
+                password:
+                  type: string
+                  format: password
+                  example: 123456
+      responses:
+        '200':
+          description: Jeton JWT généré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JSON Web Token
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQi...
+        '401':
+          description: Identifiants invalides
+
   /users:
     get:
       summary: Fetch all users
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: List of users
@@ -17,10 +61,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-                  
+
   /users/{id}:
-    put:
+    patch:
       summary: Update a user by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -60,6 +106,8 @@ paths:
 
     delete:
       summary: Delete a user by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -86,6 +134,8 @@ paths:
   /users/{username}:
     get:
       summary: Fetch a user by username
+      security:
+        - bearerAuth: []
       parameters:
         - name: username
           in: path
@@ -106,6 +156,8 @@ paths:
   /users/save:
     post:
       summary: Create a new user
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -141,9 +193,12 @@ paths:
                   status:
                     type: string
                     example: Creation failed <error message>
+
   /boards:
     get:
       summary: Fetch all boards
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: List of boards
@@ -157,6 +212,8 @@ paths:
   /boards/{id}:
     get:
       summary: Fetch a board by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -175,6 +232,8 @@ paths:
           description: Board not found
     delete:
       summary: Delete a board by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -197,10 +256,12 @@ paths:
                   status:
                     type: string
                     example: Deletion failed <error message>
-  
+
   /boards/save:
     post:
       summary: Create a new board
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -236,10 +297,12 @@ paths:
                   status:
                     type: string
                     example: Creation failed <error message>
-  
+
   /boards/edit/{id}:
-    put:
+    patch:
       summary: Update an existing board
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -284,7 +347,143 @@ paths:
                   status:
                     type: string
                     example: Update failed <error message>
+
+  /tasks/{id}:
+    get:
+      summary: Fetch all tasks for a specific board ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the board to retrieve tasks from
+      responses:
+        '200':
+          description: List of tasks, possibly formatted by TaskFormatter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: Board not found
+    delete:
+      summary: Delete a task by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the task to delete
+      responses:
+        '204':
+          description: Task deleted successfully (no content)
+        '404':
+          description: Task not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Delete task failed <error message>
+
+  /tasks/save:
+    post:
+      summary: Create a new task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDto'
+      responses:
+        '200':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Task created
+        '400':
+          description: Validation error
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Creation failed <error message>
+
+  /tasks/edit/{id}:
+    patch:
+      summary: Update an existing task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the task to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDto'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Task updated
+        '400':
+          description: Validation error
+        '404':
+          description: Task not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Update failed <error message>
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     User:
       type: object
@@ -314,7 +513,7 @@ components:
           type: string
           format: email
           example: newuser@example.com
-    
+
     Board:
       type: object
       properties:
@@ -355,15 +554,56 @@ components:
           type: integer
           example: 5
 
+    TaskState:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: To Do
+        order:
+          type: integer
+          example: 1
+          description: The order of the state in the board workflow
+
     Task:
       type: object
       properties:
         id:
           type: integer
           example: 100
-        title:
+        name:
           type: string
-          example: Task Title
+          example: Implement API Documentation
         description:
           type: string
-          example: Task details
+          example: Add all existing routes to the OpenAPI spec.
+        state:
+          $ref: '#/components/schemas/TaskState'
+        boardId:
+          type: integer
+          example: 10
+
+    TaskDto:
+      type: object
+      required:
+        - name
+        - description
+        - boardId
+      properties:
+        name:
+          type: string
+          example: New Feature
+        description:
+          type: string
+          example: Implement the new user profile page.
+        boardId:
+          type: integer
+          example: 10
+          description: The board ID the task belongs to (required for creation)
+        stateId:
+          type: integer
+          example: 1
+          description: The ID of the task state (required for updates)

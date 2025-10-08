@@ -9,14 +9,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class TaskDto
 {
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(max: 255)]
     private string $name;
 
     #[Assert\Length(
         max: 255,
         maxMessage: 'Description cannot be longer than {{ limit }} characters.'
-    )]    
+    )]
     private ?string $description;
 
     #[Assert\Type('integer')]

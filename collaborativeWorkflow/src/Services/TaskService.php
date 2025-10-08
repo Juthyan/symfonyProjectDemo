@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\DTO\TaskDto;
 use App\Entity\Task;
-use App\Entity\TaskState;
 use App\Repository\BoardRepository;
 use App\Repository\TaskRepository;
 use App\Repository\TaskStateRepository;
@@ -30,9 +29,8 @@ class TaskService
 
     public function fetchBoardTask(int $boardId): array
     {
-        return $this->taskRepository->findBy(['board'=> $boardId]);
+        return $this->taskRepository->findBy(['board' => $boardId]);
     }
-
 
     public function createTask(TaskDto $dto): JsonResponse
     {
@@ -44,7 +42,7 @@ class TaskService
         $board = $this->boardRepository->findOneBy(['id' => $dto->getBoardId()]);
         $boardTask->setBoard($board);
 
-        //Default State
+        // Default State
         $defaultState = $this->taskStateRepository->findOneBy(['order' => 1]);
         $boardTask->setState($defaultState);
 
@@ -61,14 +59,22 @@ class TaskService
     {
         $boardTask = $this->taskRepository->findOneBy(['id' => $id]);
 
-        if(!$boardTask){
+        if (!$boardTask) {
             return new JsonResponse(['status' => 'Task not found'], 404);
         }
 
-        $boardTask->setName($dto->getName());
-        $boardTask->setDescription($dto->getDescription());
-        $taskState = $this->taskStateRepository->findOneBy(['id' => $dto->getStateId()]);
-        $boardTask->setState($taskState);
+        if (!empty($dto->getName()) && $dto->getName() !== $boardTask->getName()) {
+            $boardTask->setName($dto->getName());
+        }
+
+        if ($dto->getDescription() !== $boardTask->getDescription()) {
+            $boardTask->setDescription($dto->getDescription());
+        }
+
+        if ($dto->getStateId() !== $boardTask->getState()->getId()) {
+            $taskState = $this->taskStateRepository->findOneBy(['id' => $dto->getStateId()]);
+            $boardTask->setState($taskState);
+        }
 
         try {
             $this->saveTask($boardTask);
@@ -83,13 +89,12 @@ class TaskService
     {
         $boardTask = $this->taskRepository->findOneBy(['id' => $id]);
 
-        if(!$boardTask){
+        if (!$boardTask) {
             return new JsonResponse(['status' => 'Task not found'], 404);
         }
         try {
             $this->entityManager->remove($boardTask);
             $this->entityManager->flush();
-
         } catch (\Throwable $e) {
             return new JsonResponse(['status' => 'Delete task failed '.$e->getMessage()], 500);
         }
@@ -104,7 +109,7 @@ class TaskService
             $this->entityManager->persist($task);
             $this->entityManager->flush();
             $this->entityManager->commit();
-        }catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->entityManager->rollback();
             throw $e;
         }

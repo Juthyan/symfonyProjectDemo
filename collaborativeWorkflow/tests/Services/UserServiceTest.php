@@ -286,6 +286,6 @@ class UserServiceTest extends MockeryTestCase
         $this->assertEquals(500, $response->getStatusCode());
 
         $data = json_decode($response->getContent(), true);
-        $this->assertStringContainsString('Creation failed', $data['status']);
+        $this->assertStringContainsString('Delete user failed', $data['status']);
     }
 }

@@ -98,9 +98,8 @@ class UserService
         try {
             $this->entityManager->remove($user);
             $this->entityManager->flush();
-
         } catch (\Throwable $e) {
-            return new JsonResponse(['status' => 'Delete user failed '.$e->getMessage()], 500);
+            return new JsonResponse(['status' => 'Delete user failed'.$e->getMessage()], 500);
         }
 
         return new JsonResponse(['status' => 'User deleted'], 204);
