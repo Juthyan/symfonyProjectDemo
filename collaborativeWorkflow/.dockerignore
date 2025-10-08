@@ -1,0 +1,17 @@
+Ignorer le cache
+.dockerignore
+.git
+.gitignore
+.idea/
+.vscode/
+
+Ignorer les dépendances locales (nous utilisons composer install dans le conteneur)
+vendor/
+
+Ignorer les logs et le cache de l'environnement local
+var/cache/*
+var/log/*
+
+Ignorer l'environnement de développement local
+.env.local
+.env.local.php
