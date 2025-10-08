@@ -80,11 +80,11 @@ class UserService
 
         try {
             $this->saveUser($user);
-
-            return new JsonResponse(['status' => 'User updated'], 200);
         } catch (\Throwable $e) {
             return new JsonResponse(['status' => 'Update failed: '.$e->getMessage()], 500);
         }
+
+        return new JsonResponse(['status' => 'User updated'], 200);
     }
 
     public function deleteUser(int $id): JsonResponse
@@ -98,11 +98,11 @@ class UserService
         try {
             $this->entityManager->remove($user);
             $this->entityManager->flush();
-
-            return new JsonResponse(['status' => 'User deleted'], 204);
         } catch (\Throwable $e) {
-            return new JsonResponse(['status' => 'Creation failed '.$e->getMessage()], 500);
+            return new JsonResponse(['status' => 'Delete user failed'.$e->getMessage()], 500);
         }
+
+        return new JsonResponse(['status' => 'User deleted'], 204);
     }
 
     private function saveUser(User $user): void

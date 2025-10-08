@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/boards')]
+#[Route('/api/boards')]
 final class BoardController extends AbstractController
 {
     private BoardService $boardService;
@@ -51,7 +51,7 @@ final class BoardController extends AbstractController
         return $this->boardService->createBoard($boardDto);
     }
 
-    #[Route('/edit/{id}', name: 'edit_board', methods: ['PUT'])]
+    #[Route('/edit/{id}', name: 'edit_board', methods: ['PATCH'])]
     public function editBoard(int $id, #[MapRequestPayload] BoardDto $dto): Response
     {
         return $this->boardService->editBoard($id, $dto);
