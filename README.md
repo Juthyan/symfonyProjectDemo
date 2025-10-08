@@ -1,25 +1,28 @@
-# Collaborative Workflow API
-
+Collaborative Workflow API
 A Symfony-based RESTful API for managing users, boards, and roles in a collaborative task management system.
 
----
+🛠️ Tech Stack
+PHP 8.3
 
-## 🛠️ Tech Stack
+Symfony 6+
 
-- **PHP 8.3**
-- **Symfony 6+**
-- **PostgreSQL**
-- **Doctrine ORM**
-- **OpenApi SwaggerUI**
-- **PHPUnit + Mockery** (unit testing)
-- **PHP-CS-Fixer** (code style)
-- **PHP-Stan**
-- **Twig** (optional, only if rendering HTML views)
+JWT Authentication (JSON Web Tokens)
 
----
+PostgreSQL
 
-## 📁 Project Structure
-```
+Doctrine ORM
+
+OpenApi SwaggerUI
+
+PHPUnit + Mockery (unit testing)
+
+PHP-CS-Fixer (code style)
+
+PHP-Stan
+
+Twig (optional, only if rendering HTML views)
+
+📁 Project Structure
 src/
 ├── Controller/ # API controllers
 ├── DTO/
@@ -27,6 +30,7 @@ src/
 ├── Formatter/ # Formatters to transform entities into JSON-ready arrays
 ├── Repository/ # Custom repository logic
 ├── Services/ # Business logic layer
+├── Utils
 
 public/
 ├── openapi/ # Custom OpenAPI spec (api_doc.yaml)
@@ -37,77 +41,82 @@ config/
 tests/
 ├── Formatter/ # Unit tests for formatters
 ├── Services/ # Unit tests for services
-```
-yaml
-Copier le code
 
----
 
-## 🚀 Getting Started
 
-### 1. Clone & Install Dependencies
-
-```bash
-git clone https://github.com/your-repo/collaborative-workflow.git
+🚀 Getting Started
+1. Clone & Install Dependencies
+git clone [https://github.com/your-repo/collaborative-workflow.git](https://github.com/your-repo/collaborative-workflow.git)
 cd collaborative-workflow
 
 composer install
+
+
+
 2. Setup Environment
-bash
-Copier le code
 cp .env .env.local
 # Edit database credentials as needed
+
+
+
 3. Database
-bash
-Copier le code
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
-4. Run the App
-bash
-Copier le code
+
+
+
+4. Run the App (Local Development)
 symfony serve
 # or
 php -S localhost:8000 -t public
+
+
+
 📡 API Endpoints
 🔐 User Endpoints
-GET /user — Fetch all users
-
-GET /user/{username} — Fetch a user by username
+GET /users — Fetch all users
+GET /users/{username} — Fetch a user by username
+POST /users/save — Create a new user
+PATCH /users/edit/{id} — Update an existing user (PATCH for partial update)
+DELETE /users/{id} — Delete a user by ID
 
 📋 Board Endpoints
-GET /board — Fetch all boards
-
-GET /board/{id} — Fetch a board by ID
+GET /boards — Fetch all boards
+GET /boards/{id} — Fetch a board by ID
+POST /boards/save — Create a new board
+PUT /boards/edit/{id} — Update an existing board (PUT kept for demonstration)
+DELETE /boards/{id} — Delete a board by ID
 
 All responses are formatted using Formatter classes (e.g., UserFormatter, BoardFormatter).
 
 🧪 Running Tests
-bash
-Copier le code
 ./vendor/bin/phpunit
+
+
+
 Includes unit tests for services and formatters using Mockery.
 
 💅 Code Style
-bash
-Copier le code
 ./vendor/bin/php-cs-fixer fix --allow-risky=yes
+
+
+
 CS Fixer is configured to enforce strict types, short array syntax, and Symfony rules.
 
 📖 API Documentation
 Swagger UI available at:
 
-pgsql
-Copier le code
 GET /api/doc         → Interactive Swagger UI
 GET /api/doc.json    → Raw OpenAPI JSON spec
+
+
+
 🔧 Define Your Own Docs
 OpenAPI YAML:
 Edit config/openapi/api_doc.yaml to define custom documentation manually.
 
 Example:
 
-yaml
-Copier le code
 openapi: 3.0.0
 info:
   title: My App API
@@ -126,9 +135,14 @@ paths:
       responses:
         '200':
           description: OK
+
+
+
 Make sure the YAML paths match your actual route prefixes (e.g., /user, not /api/user unless configured that way).
 
 📌 Design Notes
+Security (JWT): Most routes require a valid JWT token in the Authorization: Bearer <token> header.
+
 Formatters abstract the serialization logic from controllers.
 
 Services handle business logic and interact with Doctrine repositories.
@@ -137,20 +151,15 @@ DTOs and validation resolvers may be introduced later for request validation.
 
 Manual OpenAPI definition avoids route annotations for cleaner code.
 
-🧼 TODO
- Add DTO & request validation with Symfony Validator
+🎯 TODO
+Add logs
 
- Add authentication (JWT or session-based)
+Refactor
 
- Extend Swagger spec to cover all endpoints
+Containerization (Docker): Create an optimized (multi-stage) Dockerfile for the production environment (PHP-FPM).
 
- CI pipeline for tests and code style checks
+Deployment on GCP Cloud Run: Set up CI/CD and gcloud commands to deploy the Docker image on Google Cloud Run.
 
 🧑‍💻 Author
 Yann
 Open to contributions, improvements, and feedback!
-
-yaml
-Copier le code
-
----
