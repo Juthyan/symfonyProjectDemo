@@ -1,17 +1,30 @@
-Ignorer le cache
-.dockerignore
+# Files and directories to ignore when building the Docker image
+# Git metadata and environment files
 .git
 .gitignore
-.idea/
-.vscode/
-
-Ignorer les dépendances locales (nous utilisons composer install dans le conteneur)
-vendor/
-
-Ignorer les logs et le cache de l'environnement local
-var/cache/*
-var/log/*
-
-Ignorer l'environnement de développement local
+.env
 .env.local
-.env.local.php
+.DS_Store
+
+# Local development and generated files
+/var/
+/node_modules/
+
+# Docker build artifacts
+.dockerignore
+Dockerfile
+
+# Ignore the configuration directories themselves,
+# as the Dockerfile copies only specific files from them
+# REMOVE OR COMMENT OUT THESE TWO LINES:
+# /docker/
+# /nginx/
+
+# PHP dependencies (only composer.json is needed, vendor is installed in stage 1)
+# Although 'vendor' is handled by multi-stage, excluding it here prevents copying
+# a potentially massive local folder during the 'COPY .' command.
+/vendor/
+
+# Configuration files only needed locally
+# symfony.lock is needed for Stage 1, but we don't want the local copy slowing down 'COPY .'
+# (The Dockerfile copies it specifically in the first stage)
