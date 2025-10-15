@@ -1,167 +1,209 @@
-Collaborative Workflow API
-A Symfony-based RESTful API for managing users, boards, and roles in a collaborative task management system.
+# 🧠 Collaborative Workflow API
 
-🛠️ Tech Stack
-PHP 8.3
+A **Symfony-based RESTful API** for managing users, boards, and roles in a collaborative task management system.
 
-Symfony 6+
+---
 
-JWT Authentication (JSON Web Tokens)
+## 🛠️ Tech Stack
 
-PostgreSQL
+- **PHP 8.3**
+- **Symfony 6+**
+- **JWT Authentication (JSON Web Tokens)**
+- **PostgreSQL (Cloud SQL)**
+- **Doctrine ORM**
+- **OpenAPI / Swagger UI**
+- **PHPUnit + Mockery** (unit testing)
+- **PHP-CS-Fixer** (code style)
+- **PHPStan** (static analysis)
+- **Twig** *(optional, for HTML rendering)*
 
-Doctrine ORM
+---
 
-OpenApi SwaggerUI
+## 📁 Project Structure
 
-PHPUnit + Mockery (unit testing)
-
-PHP-CS-Fixer (code style)
-
-PHP-Stan
-
-Twig (optional, only if rendering HTML views)
-
-📁 Project Structure
+```
 src/
-├── Controller/ # API controllers
+├── Controller/   # API controllers
 ├── DTO/
-├── Entity/ # Doctrine entities: User, Board, Role, UserRole, Task
-├── Formatter/ # Formatters to transform entities into JSON-ready arrays
-├── Repository/ # Custom repository logic
-├── Services/ # Business logic layer
-├── Utils
+├── Entity/       # Doctrine entities: User, Board, Role, UserRole, Task
+├── Formatter/    # Formatters for clean JSON responses
+├── Repository/   # Custom repository logic
+├── Services/     # Business logic layer
+├── Utils/
 
 public/
-├── openapi/ # Custom OpenAPI spec (api_doc.yaml)
+├── openapi/      # Custom OpenAPI spec (api_doc.yaml)
 
 config/
-├── routes.yaml # Swagger UI & JSON spec exposure
+├── routes.yaml   # Swagger UI & JSON spec exposure
 
 tests/
-├── Formatter/ # Unit tests for formatters
-├── Services/ # Unit tests for services
+├── Formatter/    # Unit tests for formatters
+├── Services/     # Unit tests for services
+```
 
+---
 
+## 🚀 Getting Started
 
-🚀 Getting Started
-1. Clone & Install Dependencies
-git clone [https://github.com/your-repo/collaborative-workflow.git](https://github.com/your-repo/collaborative-workflow.git)
+### 1️⃣ Clone & Install Dependencies
+```bash
+git clone https://github.com/your-repo/collaborative-workflow.git
 cd collaborative-workflow
-
 composer install
+```
 
-
-
-2. Setup Environment
+### 2️⃣ Setup Environment
+```bash
 cp .env .env.local
 # Edit database credentials as needed
+```
 
-
-
-3. Database
+### 3️⃣ Database
+```bash
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
+```
 
-
-
-4. Run the App (Local Development)
+### 4️⃣ Run the App (Local Development)
+```bash
 symfony serve
 # or
 php -S localhost:8000 -t public
+```
 
+---
 
+## 📡 API Endpoints
 
-📡 API Endpoints
-🔐 User Endpoints
-GET /users — Fetch all users
-GET /users/{username} — Fetch a user by username
-POST /users/save — Create a new user
-PATCH /users/edit/{id} — Update an existing user (PATCH for partial update)
-DELETE /users/{id} — Delete a user by ID
+### 🔐 User Endpoints
+- `GET /users` — Fetch all users  
+- `GET /users/{username}` — Fetch a user by username  
+- `POST /users/save` — Create a new user  
+- `PATCH /users/edit/{id}` — Update an existing user  
+- `DELETE /users/{id}` — Delete a user  
 
-📋 Board Endpoints
-GET /boards — Fetch all boards
-GET /boards/{id} — Fetch a board by ID
-POST /boards/save — Create a new board
-PUT /boards/edit/{id} — Update an existing board (PUT kept for demonstration)
-DELETE /boards/{id} — Delete a board by ID
+### 📋 Board Endpoints
+- `GET /boards` — Fetch all boards  
+- `GET /boards/{id}` — Fetch a board by ID  
+- `POST /boards/save` — Create a new board  
+- `PUT /boards/edit/{id}` — Update a board  
+- `DELETE /boards/{id}` — Delete a board  
 
-All responses are formatted using Formatter classes (e.g., UserFormatter, BoardFormatter).
+All responses are formatted using dedicated `Formatter` classes.
 
-🧪 Running Tests
+---
+
+## 🧪 Running Tests
+```bash
 ./vendor/bin/phpunit
+```
+Includes unit tests for `Services` and `Formatters` using Mockery.
 
+---
 
-
-Includes unit tests for services and formatters using Mockery.
-
-💅 Code Style
+## 💅 Code Style
+```bash
 ./vendor/bin/php-cs-fixer fix --allow-risky=yes
+```
+Ensures PSR-12 and Symfony rules with strict types and short array syntax.
 
+---
 
+## 📖 API Documentation
 
-CS Fixer is configured to enforce strict types, short array syntax, and Symfony rules.
-
-📖 API Documentation
 Swagger UI available at:
+- `GET /api/doc` → Interactive Swagger UI  
+- `GET /api/doc.json` → Raw OpenAPI JSON spec  
 
-GET /api/doc         → Interactive Swagger UI
-GET /api/doc.json    → Raw OpenAPI JSON spec
+Custom OpenAPI spec: `public/openapi/api_doc.yaml`
 
+---
 
+## ☁️ Deployment (Google Cloud Run)
 
-🔧 Define Your Own Docs
-OpenAPI YAML:
-Edit config/openapi/api_doc.yaml to define custom documentation manually.
+### CI/CD Pipeline Overview
 
-Example:
+This project is configured for **automatic deployment to Google Cloud Run** using **Cloud Build** and **Artifact Registry**.
 
-openapi: 3.0.0
-info:
-  title: My App API
-  description: API documentation for My App
-  version: 1.0.0
-paths:
-  /user/{username}:
-    get:
-      summary: Get a user by username
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
+Every push to the `main` branch will:
+1. Build a Docker image via Cloud Build  
+2. Push it to Artifact Registry  
+3. Deploy it to Cloud Run  
 
+---
 
+### Required GCP Resources
 
-Make sure the YAML paths match your actual route prefixes (e.g., /user, not /api/user unless configured that way).
+| Resource | Purpose |
+|-----------|----------|
+| **Secret Manager** | Stores sensitive data like `DATABASE_URL`, `JWT_PASSPHRASE`, etc. |
+| **Artifact Registry** | Hosts Docker images |
+| **Cloud Run** | Runs Symfony API |
+| **Cloud SQL (PostgreSQL)** | Shared database |
+| **VPC Connector** | `symfony-vpc-connector` for secure SQL access |
+| **Service Account** | `cloud-run-db-job@PROJECT_ID.iam.gserviceaccount.com` with least privilege roles |
 
-📌 Design Notes
-Security (JWT): Most routes require a valid JWT token in the Authorization: Bearer <token> header.
+---
 
-Formatters abstract the serialization logic from controllers.
+### Build Configuration (`cloudbuild.yaml`)
+```yaml
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'REGION-docker.pkg.dev/PROJECT_ID/symfony-repo/symfony-image:$COMMIT_SHA',
+      '.'
+    ]
 
-Services handle business logic and interact with Doctrine repositories.
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'REGION-docker.pkg.dev/PROJECT_ID/symfony-repo/symfony-image:$COMMIT_SHA'
+    ]
 
-DTOs and validation resolvers may be introduced later for request validation.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'symfony-web-service',
+      '--image', 'REGION-docker.pkg.dev/PROJECT_ID/symfony-repo/symfony-image:$COMMIT_SHA',
+      '--region', 'REGION',
+      '--platform', 'managed',
+      '--service-account', 'cloud-run-db-job@PROJECT_ID.iam.gserviceaccount.com',
+      '--allow-unauthenticated',
+      '--vpc-connector', 'symfony-vpc-connector',
+      '--set-env-vars', 'APP_ENV=prod,DATABASE_URL=${DATABASE_URL}',
+      '--timeout', '300',
+      '--concurrency', '80',
+      '--min-instances', '1'
+    ]
 
-Manual OpenAPI definition avoids route annotations for cleaner code.
+images:
+  - 'REGION-docker.pkg.dev/PROJECT_ID/symfony-repo/symfony-image:$COMMIT_SHA'
+```
 
-🎯 TODO
-Add logs
+Then simply push:
+```bash
+git push origin main
+```
+The pipeline runs automatically 🎯
 
-Refactor
+---
 
-Containerization (Docker): Create an optimized (multi-stage) Dockerfile for the production environment (PHP-FPM).
+## 🔭 Phase 2 (Upcoming Features)
 
-Deployment on GCP Cloud Run: Set up CI/CD and gcloud commands to deploy the Docker image on Google Cloud Run.
+| Feature | Description |
+|----------|--------------|
+| **Go Microservice** | Background job handler for async processing, events, or notifications |
+| **Refactor** | Code structure and performance improvements |
+| **User Permissions** | Role-based access control (RBAC) for fine-grained authorization |
+| **I18n** | Internationalization and localization support |
 
-I18n
+---
 
-🧑‍💻 Author
-Yann
+## 🧑‍💻 Author
+
+**Yann**  
 Open to contributions, improvements, and feedback!
+
+---
