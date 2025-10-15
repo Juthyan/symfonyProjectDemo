@@ -60,3 +60,7 @@ steps:
 # 🏷️ Liste des images construites
 images:
   - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$COMMIT_SHA'
+
+# 🧾 Options de build
+options:
+  logging: CLOUD_LOGGING_ONLY
