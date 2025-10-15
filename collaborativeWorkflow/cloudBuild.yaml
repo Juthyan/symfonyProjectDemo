@@ -1,0 +1,62 @@
+# ===============================================================
+# 🏗️ Cloud Build pipeline for Symfony (Cloud Run + Cloud SQL)
+# ===============================================================
+# Ce fichier :
+# 1. Construit l'image Docker à partir du Dockerfile
+# 2. Pousse l'image dans Artifact Registry
+# 3. Déploie automatiquement sur Cloud Run (avec VPC + Secrets)
+# ===============================================================
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/symfony-collaborative-workflow/secrets/DATABASE_URL/versions/latest
+      env: DATABASE_URL
+    - versionName: projects/symfony-collaborative-workflow/secrets/APP_SECRET/versions/latest
+      env: APP_SECRET
+
+steps:
+  # 🧰 1️⃣ Étape : Build de l'image Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$COMMIT_SHA',
+        '.'
+      ]
+
+  # 🚀 2️⃣ Étape : Push de l’image vers Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$COMMIT_SHA'
+      ]
+
+  # 🌍 3️⃣ Étape : Déploiement sur Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    env:
+      - DATABASE_URL
+      - APP_SECRET
+    args:
+      [
+        'run', 'deploy', 'symfony-web-service',
+        '--image', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$COMMIT_SHA',
+        '--platform', 'managed',
+        '--region', 'northamerica-northeast1',
+        '--project', 'symfony-collaborative-workflow',
+        '--allow-unauthenticated',
+        '--cpu', '1',
+        '--memory', '512Mi',
+        '--port', '8080',
+        '--timeout', '300',
+        '--concurrency', '80',
+        '--min-instances', '1',
+        '--vpc-connector', 'symfony-vpc-connector',
+        '--service-account', 'cloud-run-db-job@symfony-collaborative-workflow.iam.gserviceaccount.com',
+        '--set-env-vars', 'APP_ENV=prod,DATABASE_URL=${DATABASE_URL},APP_SECRET=${APP_SECRET}'
+      ]
+
+# 🏷️ Liste des images construites
+images:
+  - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$COMMIT_SHA'
