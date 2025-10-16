@@ -1,5 +1,9 @@
 # ===============================================================
 # 🏗️ Cloud Build pipeline for Symfony (Cloud Run + Cloud SQL)
+# - Builds with unique tag $BUILD_ID
+# - Pushes :$BUILD_ID and :latest
+# - Deploys the $BUILD_ID image to Cloud Run
+# - Cleans old revisions (keeps active)
 # ===============================================================
 
 serviceAccount: projects/symfony-collaborative-workflow/serviceAccounts/cloud-build-sa@symfony-collaborative-workflow.iam.gserviceaccount.com
@@ -12,16 +16,18 @@ availableSecrets:
       env: APP_SECRET
 
 steps:
-  # 🧰 1️⃣ Build the Docker image
+  # 1) Build the Docker image (use Dockerfile located in collaborativeWorkflow/)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
         'build',
+        '-f', 'Dockerfile',
         '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID',
+        '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest',
         '.'
       ]
 
-  # 🚀 2️⃣ Push the image to Artifact Registry
+  # 2) Push both tags to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
@@ -29,13 +35,21 @@ steps:
         'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID'
       ]
 
-  # 🌍 3️⃣ Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest'
+      ]
+
+  # 3) Deploy the BUILD_ID-tagged image to Cloud Run (uses Secret Manager secrets)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: bash
     secretEnv: ['DATABASE_URL', 'APP_SECRET']
     args:
       - -c
       - |
+        echo "Deploying image with BUILD_ID: $BUILD_ID"
         gcloud run deploy symfony-web-service \
           --image northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID \
           --platform managed \
@@ -53,44 +67,38 @@ steps:
           --set-env-vars APP_ENV=prod \
           --set-secrets DATABASE_URL=DATABASE_URL:latest,APP_SECRET=APP_SECRET:latest
 
-  # 🧹 4️⃣ Cleanup old revisions (keep only the last active one)
+  # 4) Cleanup old revisions: determine active revision from the service and delete others
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: bash
     args:
       - -c
       - |
-        echo "🧹 Cleaning up old revisions..."
-        ACTIVE_REVISION=$(gcloud run revisions list \
-          --service symfony-web-service \
-          --region northamerica-northeast1 \
-          --format='value(metadata.name)' \
-          --filter='status.conditions.type=Active AND status.conditions.status=True')
+        echo "🧹 Starting cleanup of old revisions..."
+        # Fetch the active revision from the service traffic
+        ACTIVE_REV=$$(gcloud run services describe symfony-web-service \
+          --region=northamerica-northeast1 \
+          --format='value(status.traffic[0].revisionName)')
+        echo "Active revision (kept): $$ACTIVE_REV"
 
-        if [ -n "$${ACTIVE_REVISION}" ]; then
-          OLD_REVISIONS=$(gcloud run revisions list \
-            --service symfony-web-service \
-            --region northamerica-northeast1 \
-            --format='value(metadata.name)' \
-            --filter="metadata.name!=$${ACTIVE_REVISION}")
-
-          if [ -n "$${OLD_REVISIONS}" ]; then
-            echo "$${OLD_REVISIONS}" | while read REV; do
-              echo "Deleting old revision: $${REV}"
-              gcloud run revisions delete "$${REV}" \
-                --region northamerica-northeast1 \
-                --quiet || true
-            done
-          else
-            echo "No old revisions to delete."
+        # List all revisions and delete those that are not the active one
+        gcloud run revisions list \
+          --service=symfony-web-service \
+          --region=northamerica-northeast1 \
+          --format='value(metadata.name)' | \
+        grep -v "^$$ACTIVE_REV$$" | \
+        while read REV; do
+          if [ -n "$$REV" ]; then
+            echo "Deleting old revision: $$REV"
+            gcloud run revisions delete "$$REV" --region=northamerica-northeast1 --quiet || true
           fi
-        else
-          echo "No active revision found. Skipping cleanup."
-        fi
+        done
 
-# 🏷️ Built images
+        echo "🧹 Cleanup finished."
+
+# Images produced by this build (for Cloud Build UI)
 images:
   - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID'
+  - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest'
 
-# 🧾 Build options
 options:
   logging: CLOUD_LOGGING_ONLY
