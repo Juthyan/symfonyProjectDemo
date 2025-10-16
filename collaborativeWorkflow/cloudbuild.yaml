@@ -12,51 +12,85 @@ availableSecrets:
       env: APP_SECRET
 
 steps:
-  # 🧰 1️⃣ Étape : Build de l'image Docker
+  # 🧰 1️⃣ Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
         'build',
-        '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest',
+        '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID',
         '.'
       ]
 
-  # 🚀 2️⃣ Étape : Push de l’image vers Artifact Registry
+  # 🚀 2️⃣ Push the image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
         'push',
-        'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest'
+        'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID'
       ]
 
-  # 🌍 3️⃣ Étape : Déploiement sur Cloud Run
+  # 🌍 3️⃣ Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: bash
     secretEnv: ['DATABASE_URL', 'APP_SECRET']
     args:
-    - -c
-    - |
-      gcloud run deploy symfony-web-service \
-        --image northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest \
-        --platform managed \
-        --region northamerica-northeast1 \
-        --project symfony-collaborative-workflow \
-        --allow-unauthenticated \
-        --cpu 1 \
-        --memory 512Mi \
-        --port 8080 \
-        --timeout 300 \
-        --concurrency 80 \
-        --min-instances 1 \
-        --vpc-connector symfony-vpc-connector \
-        --service-account cloud-run-db-job@symfony-collaborative-workflow.iam.gserviceaccount.com \
-        --set-env-vars APP_ENV=prod \
-        --set-secrets DATABASE_URL=DATABASE_URL:latest,APP_SECRET=APP_SECRET:latest
+      - -c
+      - |
+        gcloud run deploy symfony-web-service \
+          --image northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID \
+          --platform managed \
+          --region northamerica-northeast1 \
+          --project symfony-collaborative-workflow \
+          --allow-unauthenticated \
+          --cpu 1 \
+          --memory 512Mi \
+          --port 8080 \
+          --timeout 300 \
+          --concurrency 80 \
+          --min-instances 1 \
+          --vpc-connector symfony-vpc-connector \
+          --service-account cloud-run-db-job@symfony-collaborative-workflow.iam.gserviceaccount.com \
+          --set-env-vars APP_ENV=prod \
+          --set-secrets DATABASE_URL=DATABASE_URL:latest,APP_SECRET=APP_SECRET:latest
 
-# 🏷️ Liste des images construites
+  # 🧹 4️⃣ Cleanup old revisions (keep only the last active one)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "🧹 Cleaning up old revisions..."
+        ACTIVE_REVISION=$(gcloud run revisions list \
+          --service symfony-web-service \
+          --region northamerica-northeast1 \
+          --format='value(metadata.name)' \
+          --filter='status.conditions.type=Active AND status.conditions.status=True')
+
+        if [ -n "$${ACTIVE_REVISION}" ]; then
+          OLD_REVISIONS=$(gcloud run revisions list \
+            --service symfony-web-service \
+            --region northamerica-northeast1 \
+            --format='value(metadata.name)' \
+            --filter="metadata.name!=$${ACTIVE_REVISION}")
+
+          if [ -n "$${OLD_REVISIONS}" ]; then
+            echo "$${OLD_REVISIONS}" | while read REV; do
+              echo "Deleting old revision: $${REV}"
+              gcloud run revisions delete "$${REV}" \
+                --region northamerica-northeast1 \
+                --quiet || true
+            done
+          else
+            echo "No old revisions to delete."
+          fi
+        else
+          echo "No active revision found. Skipping cleanup."
+        fi
+
+# 🏷️ Built images
 images:
-  - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest'
+  - 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID'
 
-# 🧾 Options de build
+# 🧾 Build options
 options:
   logging: CLOUD_LOGGING_ONLY
