@@ -24,7 +24,7 @@ steps:
         '-f', 'collaborativeWorkflow/Dockerfile',
         '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:$BUILD_ID',
         '-t', 'northamerica-northeast1-docker.pkg.dev/symfony-collaborative-workflow/symfony-repo/symfony-image:latest',
-        '.'
+        'collaborativeWorkflow'
       ]
   # 2) Push both tags to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
